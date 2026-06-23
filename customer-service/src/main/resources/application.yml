@@ -39,8 +39,28 @@ springdoc:
   swagger-ui:
     path: /api/customers/swagger-ui.html
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      authService:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      authService:
+        max-attempts: 3
+        wait-duration: 500ms
+  bulkhead:
+    instances:
+      authService:
+        max-concurrent-calls: 10
+        max-wait-duration: 500ms
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,circuitbreakers

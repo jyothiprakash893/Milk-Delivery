@@ -60,8 +60,20 @@ export const AuthProvider = ({ children }) => {
     } catch {}
   };
 
+  const setUserFromOAuth = ({ accessToken, refreshToken, role, username, id, customerId, deliveryBoyId }) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('role', role);
+    localStorage.setItem('username', username);
+    if (id) localStorage.setItem('userId', id);
+    if (customerId) localStorage.setItem('customerId', customerId);
+    if (deliveryBoyId) localStorage.setItem('deliveryBoyId', deliveryBoyId);
+    localStorage.setItem('isActive', 'true');
+    setUser({ role, username, id: Number(id), customerId: customerId ? Number(customerId) : null, deliveryBoyId: deliveryBoyId ? Number(deliveryBoyId) : null, isActive: true });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, refreshUser, setUserFromOAuth }}>
       {children}
     </AuthContext.Provider>
   );

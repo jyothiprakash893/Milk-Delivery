@@ -9,6 +9,8 @@ import com.milkdelivery.customer.entity.ServiceRequest.RequestStatus;
 import com.milkdelivery.customer.exception.ResourceNotFoundException;
 import com.milkdelivery.customer.repository.CustomerRepository;
 import com.milkdelivery.customer.repository.ServiceRequestRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -87,10 +89,7 @@ public class ServiceRequestService {
         sr = serviceRequestRepository.save(sr);
 
         try {
-            restTemplate.put(
-                    "http://auth-service/api/auth/users/" + sr.getUserId() + "/activate",
-                    Map.of("customerId", customer.getId())
-            );
+            activateUserInAuthService(sr.getUserId(), customer.getId());
         } catch (Exception e) {
             log.warn("Could not notify auth-service to activate user: {}", e.getMessage());
         }
@@ -109,6 +108,19 @@ public class ServiceRequestService {
         sr = serviceRequestRepository.save(sr);
         log.info("Service request {} rejected", requestId);
         return mapToResponse(sr);
+    }
+
+    @CircuitBreaker(name = "authService", fallbackMethod = "activateUserFallback")
+    @Retry(name = "authService")
+    public void activateUserInAuthService(Long userId, Long customerId) {
+        restTemplate.put(
+                "http://auth-service/api/auth/users/" + userId + "/activate",
+                Map.of("customerId", customerId)
+        );
+    }
+
+    public void activateUserFallback(Long userId, Long customerId, Throwable t) {
+        log.warn("Failed to activate user {} in auth-service after retries: {}", userId, t.getMessage());
     }
 
     private ServiceRequestResponse mapToResponse(ServiceRequest sr) {

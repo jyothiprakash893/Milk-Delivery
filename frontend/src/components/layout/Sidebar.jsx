@@ -4,6 +4,7 @@ const menus = {
   ADMIN: [
     { path: '/dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
     { path: '/orders', label: 'Orders', icon: 'bi-basket' },
+    { path: '/products', label: 'Products', icon: 'bi-box-seam' },
     { path: '/customers', label: 'Customers', icon: 'bi-people' },
     { path: '/delivery-boys', label: 'Delivery Boys', icon: 'bi-bicycle' },
     { path: '/service-requests', label: 'Service Requests', icon: 'bi-clipboard-check' },
@@ -15,6 +16,7 @@ const menus = {
   ],
   CUSTOMER: [
     { path: '/my-dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
+    { path: '/products', label: 'Products', icon: 'bi-box-seam' },
     { path: '/place-order', label: 'Place Order', icon: 'bi-plus-circle' },
     { path: '/my-orders', label: 'My Orders', icon: 'bi-basket' },
     { path: '/my-deliveries', label: 'My Deliveries', icon: 'bi-truck' },
@@ -25,8 +27,8 @@ const menus = {
 };
 
 const roleLabels = {
-  ADMIN: 'Admin Panel',
-  CUSTOMER: 'Customer Portal',
+  ADMIN: 'ENK\'s MILK',
+  CUSTOMER: 'ENK\'s MILK',
 };
 
 const Sidebar = ({ role }) => {
@@ -47,8 +49,8 @@ const Sidebar = ({ role }) => {
           <div className="fw-bold text-white" style={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}>
             {roleLabels[role] || 'Dashboard'}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', letterSpacing: '0.02em' }}>
-            MILK DELIVERY
+          <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem', letterSpacing: '0.02em' }}>
+            Fresh Milk Delivery
           </div>
         </div>
       </div>

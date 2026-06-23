@@ -19,7 +19,7 @@ const Navbar = ({ toggleSidebar }) => {
             <i className="bi bi-droplet text-white" style={{ fontSize: '1.1rem' }}></i>
           </div>
           <span className="fw-bold text-white" style={{ fontSize: '1.05rem', letterSpacing: '-0.02em' }}>
-            Milk<span style={{ color: 'var(--primary-light)' }}>Web</span>
+            ENK's<span style={{ color: 'var(--primary-light)' }}> MILK</span>
           </span>
         </div>
       </div>

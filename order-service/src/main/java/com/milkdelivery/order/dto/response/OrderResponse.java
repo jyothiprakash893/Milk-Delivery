@@ -10,6 +10,9 @@ public class OrderResponse {
     private Long id;
     private Long customerId;
     private Long deliveryBoyId;
+    private Long productId;
+    private String productName;
+    private Double unitPrice;
     private String milkType;
     private Double quantity;
     private LocalDate deliveryDate;

@@ -10,6 +10,8 @@ import com.milkdelivery.auth.entity.User;
 import com.milkdelivery.auth.repository.UserRepository;
 import com.milkdelivery.auth.security.JwtUtils;
 import com.milkdelivery.auth.security.RedisTokenStore;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -57,6 +59,8 @@ public class AuthService {
                 .build();
     }
 
+    @CircuitBreaker(name = "customerService", fallbackMethod = "registerFallback")
+    @Retry(name = "customerService")
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new BadCredentialsException("Username already exists");
@@ -100,6 +104,22 @@ public class AuthService {
                 .build();
     }
 
+    public AuthResponse registerFallback(RegisterRequest request, Throwable t) {
+        log.warn("Register fallback triggered due to: {}", t.getMessage());
+        return AuthResponse.builder()
+                .accessToken(null)
+                .refreshToken(null)
+                .role(null)
+                .username(request.getUsername())
+                .id(null)
+                .customerId(null)
+                .deliveryBoyId(null)
+                .isActive(false)
+                .build();
+    }
+
+    @CircuitBreaker(name = "customerService")
+    @Retry(name = "customerService")
     public void createServiceRequest(RegisterRequest request, Long userId) {
         try {
             Map<String, Object> srBody = Map.of(

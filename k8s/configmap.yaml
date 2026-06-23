@@ -12,7 +12,7 @@ data:
   KAFKA_BOOTSTRAP_SERVERS: kafka-service:9092
   EUREKA_URL: http://eureka-server:8761/eureka
   CONFIG_SERVER_URL: http://config-server:8888
-  API_GATEWAY_URL: http://api-gateway:8080
+  API_GATEWAY_URL: http://api-gateway:8089
   AUTH_SERVICE_URL: http://auth-service:8081
   CUSTOMER_SERVICE_URL: http://customer-service:8082
   DELIVERY_SERVICE_URL: http://delivery-service:8083

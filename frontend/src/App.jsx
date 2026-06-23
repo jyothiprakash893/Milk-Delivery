@@ -8,6 +8,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
+import OAuthCallback from './pages/OAuthCallback';
 
 // Admin pages
 import Dashboard from './pages/Dashboard';
@@ -21,6 +22,7 @@ import Reports from './pages/Reports';
 import ManageServiceRequests from './pages/ManageServiceRequests';
 import ManageDeliveryBoys from './pages/ManageDeliveryBoys';
 import ManageOrders from './pages/ManageOrders';
+import ManageProducts from './pages/ManageProducts';
 
 // Customer pages
 import CustomerDashboard from './pages/CustomerDashboard';
@@ -30,6 +32,7 @@ import MyDeliveries from './pages/MyDeliveries';
 import MyBills from './pages/MyBills';
 import MyPayments from './pages/MyPayments';
 import MyServiceRequest from './pages/MyServiceRequest';
+import Products from './pages/Products';
 
 // Delivery Boy pages
 import BoyDashboard from './pages/BoyDashboard';
@@ -67,6 +70,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<Navigate to={redirect} replace />} />
         <Route path="/register" element={<Navigate to={redirect} replace />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
         {user.role === 'ADMIN' && (
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -80,6 +84,7 @@ function AppRoutes() {
             <Route path="/service-requests" element={<ManageServiceRequests />} />
             <Route path="/delivery-boys" element={<ManageDeliveryBoys />} />
             <Route path="/orders" element={<ManageOrders />} />
+            <Route path="/products" element={<ManageProducts />} />
           </Route>
         )}
         {user.role === 'CUSTOMER' && (
@@ -91,6 +96,7 @@ function AppRoutes() {
             <Route path="/my-bills" element={<MyBills />} />
             <Route path="/my-payments" element={<MyPayments />} />
             <Route path="/my-service-request" element={<MyServiceRequest />} />
+            <Route path="/products" element={<Products />} />
           </Route>
         )}
         {user.role === 'DELIVERY_BOY' && (
@@ -110,6 +116,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

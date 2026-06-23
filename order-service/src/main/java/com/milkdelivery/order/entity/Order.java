@@ -18,6 +18,15 @@ public class Order {
     @Column(name = "delivery_boy_id")
     private Long deliveryBoyId;
 
+    @Column(name = "product_id")
+    private Long productId;
+
+    @Column(name = "product_name", length = 100)
+    private String productName;
+
+    @Column(name = "unit_price")
+    private Double unitPrice;
+
     @Column(name = "milk_type", length = 20)
     private String milkType;
 

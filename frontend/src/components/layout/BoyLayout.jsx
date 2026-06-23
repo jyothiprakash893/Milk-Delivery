@@ -32,9 +32,9 @@ const BoyLayout = () => {
               </div>
               <div>
                 <div className="fw-bold text-white" style={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}>
-                  Delivery Panel
+                  ENK's MILK
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', letterSpacing: '0.02em' }}>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem', letterSpacing: '0.02em' }}>
                   {user?.username}
                 </div>
               </div>
@@ -64,10 +64,10 @@ const BoyLayout = () => {
                 border: '1px solid rgba(255,255,255,0.06)'
               }}>
                 <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                  Delivery Boy
+                  Delivery Partner
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>
-                  Milk Delivery System
+                  ENK's MILK
                 </div>
               </div>
             </div>
@@ -93,8 +93,8 @@ const BoyLayout = () => {
                     <i className="bi bi-bicycle text-white" style={{ fontSize: '1.2rem' }}></i>
                   </div>
                   <div>
-                    <div className="fw-bold text-white">Delivery Panel</div>
-                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem' }}>MILK DELIVERY</div>
+                    <div className="fw-bold text-white">ENK's MILK</div>
+                    <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem' }}>Delivery Partner</div>
                   </div>
                 </div>
                 <nav className="sidebar-nav flex-grow-1">

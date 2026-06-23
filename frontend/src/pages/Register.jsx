@@ -155,7 +155,10 @@ const Register = () => {
             }}>
               <i className={`bi ${step === 1 ? 'bi-person-plus' : 'bi-shield-lock'} text-white`} style={{ fontSize: '1.6rem' }}></i>
             </div>
-            <h4 className="fw-bold mb-1" style={{ color: 'var(--dark)', fontSize: '1.3rem' }}>
+            <h4 className="fw-bold mb-0" style={{ color: 'var(--dark)', fontSize: '1.3rem' }}>ENK's MILK</h4>
+            <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: 2 }}>Fresh milk, delivered daily</p>
+            <div style={{ height: 1, background: '#e2e8f0', margin: '0.75rem 0' }}></div>
+            <h4 className="fw-bold mb-1" style={{ color: '#475569', fontSize: '1.1rem' }}>
               {step === 1 ? 'Personal Details' : 'Account Setup'}
             </h4>
             <p className="text-muted" style={{ fontSize: '0.8rem' }}>

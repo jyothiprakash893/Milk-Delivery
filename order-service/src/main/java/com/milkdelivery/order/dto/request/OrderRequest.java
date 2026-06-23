@@ -10,6 +10,8 @@ public class OrderRequest {
     @NotNull(message = "Customer ID is required")
     private Long customerId;
 
+    private Long productId;
+
     @Size(max = 20, message = "Milk type must not exceed 20 characters")
     private String milkType;
 

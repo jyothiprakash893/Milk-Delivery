@@ -31,7 +31,9 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/auth/login",
             "/api/auth/register",
             "/swagger-ui/",
-            "/v3/api-docs/"
+            "/v3/api-docs/",
+            "/oauth2/",
+            "/login/oauth2/"
     );
 
     private static final String BEARER_PREFIX = "Bearer ";

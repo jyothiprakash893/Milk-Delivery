@@ -6,12 +6,17 @@ import com.milkdelivery.order.entity.Order;
 import com.milkdelivery.order.entity.Order.OrderStatus;
 import com.milkdelivery.order.exception.ResourceNotFoundException;
 import com.milkdelivery.order.repository.OrderRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +24,7 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final RestTemplate restTemplate;
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -56,17 +62,49 @@ public class OrderService {
     }
 
     @Transactional
+    @CircuitBreaker(name = "productService", fallbackMethod = "createOrderFallback")
+    @Retry(name = "productService")
     public OrderResponse createOrder(OrderRequest request) {
         log.info("Creating new order for customer: {}", request.getCustomerId());
 
+        String productName = null;
+        Double unitPrice = null;
+
+        if (request.getProductId() != null) {
+            try {
+                ResponseEntity<Map> productResp = restTemplate.getForEntity(
+                        "http://product-service/api/products/" + request.getProductId(),
+                        Map.class);
+                if (productResp.getBody() != null) {
+                    productName = (String) productResp.getBody().get("name");
+                    unitPrice = ((Number) productResp.getBody().get("price")).doubleValue();
+
+                    restTemplate.patchForObject(
+                            "http://product-service/api/products/" + request.getProductId() + "/reduce-stock",
+                            Map.of("quantity", request.getQuantity().intValue()),
+                            Void.class);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch/reduce product stock: {}", e.getMessage());
+            }
+        }
+
+        Double total = (unitPrice != null && request.getQuantity() != null)
+                ? unitPrice * request.getQuantity()
+                : null;
+
         Order order = Order.builder()
                 .customerId(request.getCustomerId())
+                .productId(request.getProductId())
+                .productName(productName)
+                .unitPrice(unitPrice)
                 .milkType(request.getMilkType())
                 .quantity(request.getQuantity())
                 .deliveryDate(request.getDeliveryDate())
                 .deliveryTime(request.getDeliveryTime())
                 .deliveryAddress(request.getDeliveryAddress())
                 .specialInstructions(request.getSpecialInstructions())
+                .totalAmount(total)
                 .status(OrderStatus.PENDING)
                 .isPaid(false)
                 .build();
@@ -74,6 +112,18 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         log.info("Order created with id: {}", saved.getId());
         return mapToResponse(saved);
+    }
+
+    public OrderResponse createOrderFallback(OrderRequest request, Throwable t) {
+        log.warn("Create order fallback triggered for customer {}: {}", request.getCustomerId(), t.getMessage());
+        return OrderResponse.builder()
+                .id(null)
+                .customerId(request.getCustomerId())
+                .productId(request.getProductId())
+                .milkType(request.getMilkType())
+                .quantity(request.getQuantity())
+                .status("PENDING")
+                .build();
     }
 
     @Transactional
@@ -128,6 +178,9 @@ public class OrderService {
                 .id(order.getId())
                 .customerId(order.getCustomerId())
                 .deliveryBoyId(order.getDeliveryBoyId())
+                .productId(order.getProductId())
+                .productName(order.getProductName())
+                .unitPrice(order.getUnitPrice())
                 .milkType(order.getMilkType())
                 .quantity(order.getQuantity())
                 .deliveryDate(order.getDeliveryDate())
