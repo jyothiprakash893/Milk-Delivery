@@ -10,34 +10,35 @@ const MyDeliveries = () => {
 
   return (
     <div>
-      <h4 className="mb-4"><i className="bi bi-truck me-2"></i>My Delivery History</h4>
-      <div className="card shadow-sm">
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead className="table-light">
-                <tr><th>Date</th><th>Quantity</th><th>Status</th><th>Notes</th></tr>
-              </thead>
-              <tbody>
-                {(!history || history.length === 0) ? (
-                  <tr><td colSpan="4" className="text-center py-4 text-muted">No delivery records found</td></tr>
-                ) : (
-                  history.map((d, i) => (
-                    <tr key={i} className={d.delivered ? 'table-success' : 'table-danger'}>
-                      <td>{d.deliveryDate}</td>
-                      <td>{d.quantity || '-'} L</td>
-                      <td>
-                        {d.delivered
-                          ? <span className="badge bg-success">Delivered</span>
-                          : <span className="badge bg-danger">Skipped</span>}
-                      </td>
-                      <td>{d.skipReason || '-'}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+      <div className="page-header animate-fade-in">
+        <h4><i className="bi bi-truck"></i> My Delivery History</h4>
+        <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>Track all your daily milk deliveries</p>
+      </div>
+      <div className="glass-card animate-fade-in-up">
+        <div className="table-responsive">
+          <table className="modern-table">
+            <thead>
+              <tr><th>Date</th><th>Quantity</th><th>Status</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              {(!history || history.length === 0) ? (
+                <tr><td colSpan="4"><div className="empty-state"><i className="bi bi-inbox"></i><p>No delivery records found</p></div></td></tr>
+              ) : (
+                history.map((d, i) => (
+                  <tr key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }}>
+                    <td style={{ fontSize: '0.85rem' }}>{d.deliveryDate}</td>
+                    <td className="fw-semibold">{d.quantity || '-'} L</td>
+                    <td>
+                      {d.delivered
+                        ? <span className="badge-modern badge-success-custom"><i className="bi bi-check-circle me-1"></i>Delivered</span>
+                        : <span className="badge-modern badge-danger-custom"><i className="bi bi-x-circle me-1"></i>Skipped</span>}
+                    </td>
+                    <td style={{ fontSize: '0.85rem', color: '#64748b' }}>{d.skipReason || '-'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -52,69 +52,87 @@ const Notifications = () => {
 
   return (
     <div>
-      <h4 className="mb-4"><i className="bi bi-bell me-2"></i>Notifications</h4>
+      <div className="page-header animate-fade-in">
+        <h4><i className="bi bi-bell"></i> Notifications</h4>
+      </div>
+
       <div className="row g-4">
         <div className="col-md-6">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white"><h6 className="mb-0">Send Bills</h6></div>
-            <div className="card-body text-center">
-              <i className="bi bi-file-text text-primary" style={{ fontSize: '3rem' }}></i>
-              <p className="mt-2 text-muted">Send monthly bills to all customers via WhatsApp/SMS</p>
-              <button className="btn btn-primary" onClick={handleSendBills} disabled={loading.bills}>
-                {loading.bills ? 'Sending...' : 'Send Bills to All'}
-              </button>
+          <div className="glass-card p-4 text-center animate-fade-in-up">
+            <div style={{
+              width: 64, height: 64, borderRadius: 16,
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 1rem', boxShadow: '0 8px 24px rgba(99,102,241,0.25)'
+            }}>
+              <i className="bi bi-file-text text-white" style={{ fontSize: '1.5rem' }}></i>
             </div>
+            <h6 className="fw-bold">Send Bills</h6>
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Send monthly bills to all customers via WhatsApp/SMS</p>
+            <button className="btn btn-modern btn-modern-primary px-4" onClick={handleSendBills} disabled={loading.bills}>
+              {loading.bills ? 'Sending...' : 'Send Bills to All'}
+            </button>
           </div>
         </div>
+
         <div className="col-md-6">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white"><h6 className="mb-0">Payment Reminder</h6></div>
-            <div className="card-body text-center">
-              <i className="bi bi-exclamation-circle text-warning" style={{ fontSize: '3rem' }}></i>
-              <p className="mt-2 text-muted">Send payment reminders to customers with dues</p>
-              <button className="btn btn-warning" onClick={handleSendReminder} disabled={loading.reminder}>
-                {loading.reminder ? 'Sending...' : 'Send Reminders'}
-              </button>
+          <div className="glass-card p-4 text-center animate-fade-in-up animate-delay-1">
+            <div style={{
+              width: 64, height: 64, borderRadius: 16,
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 1rem', boxShadow: '0 8px 24px rgba(245,158,11,0.25)'
+            }}>
+              <i className="bi bi-exclamation-circle text-white" style={{ fontSize: '1.5rem' }}></i>
             </div>
+            <h6 className="fw-bold">Payment Reminder</h6>
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Send payment reminders to customers with dues</p>
+            <button className="btn btn-modern px-4" onClick={handleSendReminder} disabled={loading.reminder}
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 600,
+                boxShadow: '0 4px 15px rgba(245,158,11,0.3)'
+              }}>
+              {loading.reminder ? 'Sending...' : 'Send Reminders'}
+            </button>
           </div>
         </div>
+
         <div className="col-12">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white"><h6 className="mb-0">Custom Message</h6></div>
-            <div className="card-body">
-              <form onSubmit={handleSubmit(handleCustom)}>
-                <div className="row g-3">
-                  <div className="col-md-4">
-                    <label className="form-label">Customer</label>
-                    <select className="form-select" {...register('customerId')}>
-                      <option value="">All customers...</option>
-                      {(customers || []).map(c => (
-                        <option key={c.id} value={c.id}>{c.name} - {c.phone}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Type</label>
-                    <select className="form-select" {...register('type')}>
-                      <option value="SMS">SMS</option>
-                      <option value="WHATSAPP">WhatsApp</option>
-                      <option value="EMAIL">Email</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">&nbsp;</label>
-                    <button type="submit" className="btn btn-primary d-block w-100" disabled={loading.custom}>
-                      {loading.custom ? 'Sending...' : 'Send Message'}
-                    </button>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Message</label>
-                    <textarea className="form-control" rows="3" {...register('message')}
-                      placeholder="Type your message here..."></textarea>
-                  </div>
+          <div className="glass-card p-4 animate-fade-in-up animate-delay-2">
+            <h6 className="fw-bold mb-3"><i className="bi bi-chat-dots me-2" style={{ color: 'var(--primary)' }}></i>Custom Message</h6>
+            <form onSubmit={handleSubmit(handleCustom)}>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold" style={{ fontSize: '0.85rem', color: '#475569' }}>Customer</label>
+                  <select className="form-control form-control-modern" {...register('customerId')}>
+                    <option value="">All customers...</option>
+                    {(customers || []).map(c => (
+                      <option key={c.id} value={c.id}>{c.name} - {c.phone}</option>
+                    ))}
+                  </select>
                 </div>
-              </form>
-            </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold" style={{ fontSize: '0.85rem', color: '#475569' }}>Type</label>
+                  <select className="form-control form-control-modern" {...register('type')}>
+                    <option value="SMS">SMS</option>
+                    <option value="WHATSAPP">WhatsApp</option>
+                    <option value="EMAIL">Email</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold" style={{ fontSize: '0.85rem', color: '#475569' }}>&nbsp;</label>
+                  <button type="submit" className="btn btn-modern btn-modern-primary w-100" disabled={loading.custom}>
+                    {loading.custom ? 'Sending...' : 'Send Message'}
+                  </button>
+                </div>
+                <div className="col-12">
+                  <label className="form-label fw-semibold" style={{ fontSize: '0.85rem', color: '#475569' }}>Message</label>
+                  <textarea className="form-control form-control-modern" rows="3" {...register('message')}
+                    placeholder="Type your message here..."></textarea>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
