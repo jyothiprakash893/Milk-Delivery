@@ -30,6 +30,9 @@ public class User {
     @Column(name = "customer_id")
     private Long customerId;
 
+    @Column(name = "delivery_boy_id")
+    private Long deliveryBoyId;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
@@ -55,6 +58,7 @@ public class User {
 
     public enum Role {
         ADMIN,
-        CUSTOMER
+        CUSTOMER,
+        DELIVERY_BOY
     }
 }

@@ -97,7 +97,7 @@ const Register = () => {
         phone: form.phone,
         address: form.address,
       });
-      toast.success('Account created! Please sign in.');
+      toast.success('Registration submitted for approval! Admin will activate your account.');
       navigate('/login');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');

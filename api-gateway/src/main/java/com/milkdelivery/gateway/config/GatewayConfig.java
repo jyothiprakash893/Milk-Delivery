@@ -28,6 +28,12 @@ public class GatewayConfig {
                         .uri("lb://payment-service"))
                 .route("notification-service", r -> r.path("/api/notifications/**")
                         .uri("lb://notification-service"))
+                .route("order-service", r -> r.path("/api/orders/**")
+                        .uri("lb://order-service"))
+                .route("delivery-boy-service", r -> r.path("/api/delivery-boys/**")
+                        .uri("lb://delivery-boy-service"))
+                .route("service-requests", r -> r.path("/api/service-requests/**")
+                        .uri("lb://customer-service"))
                 .build();
     }
 

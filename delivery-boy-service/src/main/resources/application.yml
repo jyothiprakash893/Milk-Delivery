@@ -1,0 +1,40 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: delivery-boy-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/delivery_boys_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  api-docs:
+    path: /api/delivery-boys/v3/api-docs
+  swagger-ui:
+    path: /api/delivery-boys/swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

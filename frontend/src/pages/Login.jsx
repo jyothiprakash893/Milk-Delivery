@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -46,15 +46,23 @@ const PasswordStrength = ({ password }) => {
   );
 };
 
+const roleRedirects = {
+  ADMIN: '/dashboard',
+  CUSTOMER: '/my-dashboard',
+  DELIVERY_BOY: '/boy-dashboard',
+};
+
 const Login = () => {
   const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (user) {
-    navigate(user.role === 'ADMIN' ? '/dashboard' : '/my-deliveries', { replace: true });
+    const redirect = roleRedirects[user.role] || '/my-dashboard';
+    navigate(redirect, { replace: true });
     return null;
   }
 
@@ -68,7 +76,8 @@ const Login = () => {
     try {
       const role = await login(form);
       toast.success('Welcome back!');
-      navigate(role === 'ADMIN' ? '/dashboard' : '/my-deliveries', { replace: true });
+      const redirect = roleRedirects[role] || '/my-dashboard';
+      navigate(redirect, { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid credentials');
     } finally {

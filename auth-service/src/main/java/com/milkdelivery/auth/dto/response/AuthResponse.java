@@ -13,5 +13,8 @@ public class AuthResponse {
     private String refreshToken;
     private String role;
     private String username;
+    private Long id;
     private Long customerId;
+    private Long deliveryBoyId;
+    private Boolean isActive;
 }

@@ -37,8 +37,10 @@ const Navbar = ({ toggleSidebar }) => {
           <span className="badge-modern" style={{
             background: user?.role === 'ADMIN'
               ? 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2))'
-              : 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))',
-            color: user?.role === 'ADMIN' ? '#a5b4fc' : '#6ee7b7',
+              : user?.role === 'DELIVERY_BOY'
+                ? 'linear-gradient(135deg, rgba(251,191,36,0.3), rgba(245,158,11,0.2))'
+                : 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))',
+            color: user?.role === 'ADMIN' ? '#a5b4fc' : user?.role === 'DELIVERY_BOY' ? '#fcd34d' : '#6ee7b7',
             fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.03em'
           }}>
             {user?.role}

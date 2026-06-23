@@ -385,6 +385,58 @@ services:
       - milk-network
 
   # ============================================================
+  # Order Service
+  # ============================================================
+  order-service:
+    build: ./order-service
+    container_name: milk-order-service
+    hostname: order-service
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/orders_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SERVER_PORT: 8087
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Delivery Boy Service
+  # ============================================================
+  delivery-boy-service:
+    build: ./delivery-boy-service
+    container_name: milk-delivery-boy-service
+    hostname: delivery-boy-service
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/delivery_boys_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SERVER_PORT: 8088
+    networks:
+      - milk-network
+
+  # ============================================================
   # Frontend (React + Vite)
   # ============================================================
   frontend:

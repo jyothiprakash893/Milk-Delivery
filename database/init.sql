@@ -11,8 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   username VARCHAR(50) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
-  role ENUM('ADMIN','CUSTOMER') NOT NULL,
+  role ENUM('ADMIN','CUSTOMER','DELIVERY_BOY') NOT NULL,
   customer_id BIGINT,
+  delivery_boy_id BIGINT,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_customer_id ON users(customer_id);
+CREATE INDEX idx_users_delivery_boy_id ON users(delivery_boy_id);
 
 -- ============================================================
 -- Database 2: customers_db (customer-service)
@@ -47,6 +49,23 @@ CREATE TABLE IF NOT EXISTS customers (
 CREATE INDEX idx_customers_phone ON customers(phone);
 CREATE INDEX idx_customers_status ON customers(status);
 CREATE INDEX idx_customers_area ON customers(area);
+
+CREATE TABLE IF NOT EXISTS service_requests (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  customer_id BIGINT,
+  name VARCHAR(100) NOT NULL,
+  phone VARCHAR(15) NOT NULL,
+  address TEXT NOT NULL,
+  area VARCHAR(100),
+  status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
+  admin_note VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_service_requests_user ON service_requests(user_id);
+CREATE INDEX idx_service_requests_status ON service_requests(status);
 
 -- ============================================================
 -- Database 3: deliveries_db (delivery-service)
@@ -113,3 +132,57 @@ CREATE TABLE IF NOT EXISTS payments (
 CREATE INDEX idx_payments_bill ON payments(bill_id);
 CREATE INDEX idx_payments_customer ON payments(customer_id);
 CREATE INDEX idx_payments_date ON payments(payment_date);
+
+-- ============================================================
+-- Database 6: orders_db (order-service)
+-- ============================================================
+CREATE DATABASE IF NOT EXISTS orders_db;
+USE orders_db;
+
+CREATE TABLE IF NOT EXISTS orders (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  customer_id BIGINT NOT NULL,
+  delivery_boy_id BIGINT,
+  milk_type VARCHAR(20) DEFAULT 'Cow',
+  quantity DECIMAL(4,1) NOT NULL,
+  delivery_date DATE NOT NULL,
+  delivery_time VARCHAR(20) DEFAULT '7:00 AM',
+  delivery_address VARCHAR(255),
+  status ENUM('PENDING','ASSIGNED','PICKED_UP','DELIVERED','CANCELLED') DEFAULT 'PENDING',
+  special_instructions TEXT,
+  total_amount DECIMAL(10,2),
+  is_paid BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_orders_customer ON orders(customer_id);
+CREATE INDEX idx_orders_boy ON orders(delivery_boy_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_date ON orders(delivery_date);
+
+-- ============================================================
+-- Database 7: delivery_boys_db (delivery-boy-service)
+-- ============================================================
+CREATE DATABASE IF NOT EXISTS delivery_boys_db;
+USE delivery_boys_db;
+
+CREATE TABLE IF NOT EXISTS delivery_boys (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT,
+  name VARCHAR(100) NOT NULL,
+  phone VARCHAR(15) UNIQUE NOT NULL,
+  email VARCHAR(100),
+  vehicle_number VARCHAR(50),
+  area VARCHAR(100),
+  is_available BOOLEAN DEFAULT TRUE,
+  status ENUM('ACTIVE','INACTIVE','SUSPENDED') DEFAULT 'ACTIVE',
+  rating DECIMAL(3,1) DEFAULT 0.0,
+  total_deliveries INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_delivery_boys_phone ON delivery_boys(phone);
+CREATE INDEX idx_delivery_boys_available ON delivery_boys(is_available);
+CREATE INDEX idx_delivery_boys_area ON delivery_boys(area);

@@ -4,3 +4,4 @@ export const login = (credentials) => axiosInstance.post('/auth/login', credenti
 export const register = (data) => axiosInstance.post('/auth/register', data);
 export const logout = () => axiosInstance.post('/auth/logout');
 export const refreshToken = (token) => axiosInstance.post('/auth/refresh', { refreshToken: token });
+export const getProfile = () => axiosInstance.get('/auth/profile');

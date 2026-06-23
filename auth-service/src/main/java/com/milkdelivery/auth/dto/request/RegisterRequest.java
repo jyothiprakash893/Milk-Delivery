@@ -20,4 +20,10 @@ public class RegisterRequest {
     private String role;
 
     private Long customerId;
+
+    private String name;
+
+    private String phone;
+
+    private String address;
 }

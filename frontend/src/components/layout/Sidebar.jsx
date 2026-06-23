@@ -1,23 +1,36 @@
 import { NavLink } from 'react-router-dom';
 
-const adminMenu = [
-  { path: '/dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
-  { path: '/customers', label: 'Customers', icon: 'bi-people' },
-  { path: '/deliveries', label: 'Deliveries', icon: 'bi-truck' },
-  { path: '/billing', label: 'Billing', icon: 'bi-cash-coin' },
-  { path: '/payments', label: 'Payments', icon: 'bi-wallet2' },
-  { path: '/notifications', label: 'Notifications', icon: 'bi-bell' },
-  { path: '/reports', label: 'Reports', icon: 'bi-graph-up' },
-];
+const menus = {
+  ADMIN: [
+    { path: '/dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
+    { path: '/orders', label: 'Orders', icon: 'bi-basket' },
+    { path: '/customers', label: 'Customers', icon: 'bi-people' },
+    { path: '/delivery-boys', label: 'Delivery Boys', icon: 'bi-bicycle' },
+    { path: '/service-requests', label: 'Service Requests', icon: 'bi-clipboard-check' },
+    { path: '/deliveries', label: 'Deliveries', icon: 'bi-truck' },
+    { path: '/billing', label: 'Billing', icon: 'bi-cash-coin' },
+    { path: '/payments', label: 'Payments', icon: 'bi-wallet2' },
+    { path: '/notifications', label: 'Notifications', icon: 'bi-bell' },
+    { path: '/reports', label: 'Reports', icon: 'bi-graph-up' },
+  ],
+  CUSTOMER: [
+    { path: '/my-dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
+    { path: '/place-order', label: 'Place Order', icon: 'bi-plus-circle' },
+    { path: '/my-orders', label: 'My Orders', icon: 'bi-basket' },
+    { path: '/my-deliveries', label: 'My Deliveries', icon: 'bi-truck' },
+    { path: '/my-bills', label: 'My Bills', icon: 'bi-cash-coin' },
+    { path: '/my-payments', label: 'My Payments', icon: 'bi-wallet2' },
+    { path: '/my-service-request', label: 'Service Status', icon: 'bi-clipboard-check' },
+  ],
+};
 
-const customerMenu = [
-  { path: '/my-deliveries', label: 'My Deliveries', icon: 'bi-truck' },
-  { path: '/my-bills', label: 'My Bills', icon: 'bi-cash-coin' },
-  { path: '/my-payments', label: 'My Payments', icon: 'bi-wallet2' },
-];
+const roleLabels = {
+  ADMIN: 'Admin Panel',
+  CUSTOMER: 'Customer Portal',
+};
 
 const Sidebar = ({ role }) => {
-  const menuItems = role === 'ADMIN' ? adminMenu : customerMenu;
+  const menuItems = menus[role] || menus.CUSTOMER;
 
   return (
     <div className="modern-sidebar d-flex flex-column">
@@ -32,7 +45,7 @@ const Sidebar = ({ role }) => {
         </div>
         <div>
           <div className="fw-bold text-white" style={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}>
-            {role === 'ADMIN' ? 'Admin Panel' : 'My Dashboard'}
+            {roleLabels[role] || 'Dashboard'}
           </div>
           <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', letterSpacing: '0.02em' }}>
             MILK DELIVERY
@@ -64,7 +77,7 @@ const Sidebar = ({ role }) => {
           border: '1px solid rgba(255,255,255,0.06)'
         }}>
           <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            v1.0.0
+            v2.0.0
           </div>
           <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.65rem' }}>
             Milk Delivery System

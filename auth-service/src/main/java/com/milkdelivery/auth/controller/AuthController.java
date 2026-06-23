@@ -1,15 +1,18 @@
 package com.milkdelivery.auth.controller;
 
+import com.milkdelivery.auth.dto.request.ActivateUserRequest;
 import com.milkdelivery.auth.dto.request.LoginRequest;
 import com.milkdelivery.auth.dto.request.RegisterRequest;
 import com.milkdelivery.auth.dto.response.AuthResponse;
 import com.milkdelivery.auth.dto.response.RefreshTokenResponse;
+import com.milkdelivery.auth.dto.response.UserProfileResponse;
 import com.milkdelivery.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -29,6 +32,20 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
+    }
+
+    @PutMapping("/users/{userId}/activate")
+    public ResponseEntity<Map<String, String>> activateUser(
+            @PathVariable Long userId,
+            @RequestBody ActivateUserRequest request) {
+        authService.activateUser(userId, request.getCustomerId());
+        return ResponseEntity.ok(Map.of("message", "User activated successfully"));
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> profile(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(authService.getProfile(username));
     }
 
     @PostMapping("/logout")

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class CustomerResponse {
 
     private Long id;
+    private Long userId;
     private String name;
     private String phone;
     private String email;

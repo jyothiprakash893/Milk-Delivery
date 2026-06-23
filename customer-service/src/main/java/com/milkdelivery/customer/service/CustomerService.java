@@ -53,6 +53,7 @@ public class CustomerService {
         }
 
         Customer customer = Customer.builder()
+                .userId(request.getUserId())
                 .name(request.getName())
                 .phone(request.getPhone())
                 .email(request.getEmail())
@@ -83,6 +84,7 @@ public class CustomerService {
             throw new DuplicateResourceException("Customer with phone " + request.getPhone() + " already exists");
         }
 
+        customer.setUserId(request.getUserId());
         customer.setName(request.getName());
         customer.setPhone(request.getPhone());
         customer.setEmail(request.getEmail());
@@ -116,6 +118,7 @@ public class CustomerService {
     private CustomerResponse mapToResponse(Customer customer) {
         return CustomerResponse.builder()
                 .id(customer.getId())
+                .userId(customer.getUserId())
                 .name(customer.getName())
                 .phone(customer.getPhone())
                 .email(customer.getEmail())
