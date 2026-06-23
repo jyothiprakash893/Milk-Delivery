@@ -1,0 +1,182 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: milk-delivery
+data:
+  MYSQL_HOST: mysql-service
+  MYSQL_PORT: "3306"
+  MYSQL_DATABASE: milk_delivery
+  REDIS_HOST: redis-service
+  REDIS_PORT: "6379"
+  KAFKA_BOOTSTRAP_SERVERS: kafka-service:9092
+  EUREKA_URL: http://eureka-server:8761/eureka
+  CONFIG_SERVER_URL: http://config-server:8888
+  API_GATEWAY_URL: http://api-gateway:8080
+  AUTH_SERVICE_URL: http://auth-service:8081
+  CUSTOMER_SERVICE_URL: http://customer-service:8082
+  DELIVERY_SERVICE_URL: http://delivery-service:8083
+  BILLING_SERVICE_URL: http://billing-service:8084
+  PAYMENT_SERVICE_URL: http://payment-service:8085
+  NOTIFICATION_SERVICE_URL: http://notification-service:8086
+  FRONTEND_URL: http://frontend:3000
+  LOGGING_LEVEL: INFO
+  SPRING_PROFILES_ACTIVE: k8s
+  MYSQL_INIT_SCRIPT: |
+    CREATE TABLE IF NOT EXISTS users (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(50) NOT NULL UNIQUE,
+      email VARCHAR(100) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS customers (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      phone VARCHAR(20),
+      address TEXT,
+      city VARCHAR(50),
+      latitude DECIMAL(10, 8),
+      longitude DECIMAL(11, 8),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS delivery_partners (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      phone VARCHAR(20),
+      vehicle_type VARCHAR(50),
+      vehicle_number VARCHAR(50),
+      is_available BOOLEAN DEFAULT TRUE,
+      current_latitude DECIMAL(10, 8),
+      current_longitude DECIMAL(11, 8),
+      rating DECIMAL(3, 2) DEFAULT 0.00,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      category VARCHAR(50),
+      unit VARCHAR(20) NOT NULL DEFAULT 'litre',
+      price_per_unit DECIMAL(10, 2) NOT NULL,
+      stock_quantity DECIMAL(10, 2) DEFAULT 0,
+      image_url VARCHAR(255),
+      is_available BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS orders (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      customer_id BIGINT NOT NULL,
+      order_number VARCHAR(50) NOT NULL UNIQUE,
+      status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+      subtotal DECIMAL(10, 2) NOT NULL,
+      delivery_charge DECIMAL(10, 2) DEFAULT 0,
+      tax DECIMAL(10, 2) DEFAULT 0,
+      total_amount DECIMAL(10, 2) NOT NULL,
+      delivery_address TEXT,
+      delivery_latitude DECIMAL(10, 8),
+      delivery_longitude DECIMAL(11, 8),
+      scheduled_date DATE,
+      scheduled_time_slot VARCHAR(20),
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS order_items (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      order_id BIGINT NOT NULL,
+      product_id BIGINT NOT NULL,
+      quantity DECIMAL(10, 2) NOT NULL,
+      unit_price DECIMAL(10, 2) NOT NULL,
+      total_price DECIMAL(10, 2) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id),
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS deliveries (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      order_id BIGINT NOT NULL,
+      delivery_partner_id BIGINT,
+      status VARCHAR(20) NOT NULL DEFAULT 'ASSIGNED',
+      pickup_time TIMESTAMP NULL,
+      delivered_time TIMESTAMP NULL,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id),
+      FOREIGN KEY (delivery_partner_id) REFERENCES delivery_partners(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS payments (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      order_id BIGINT NOT NULL,
+      payment_method VARCHAR(30) NOT NULL,
+      transaction_id VARCHAR(100),
+      amount DECIMAL(10, 2) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+      paid_at TIMESTAMP NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS billing_invoices (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      invoice_number VARCHAR(50) NOT NULL UNIQUE,
+      order_id BIGINT NOT NULL,
+      customer_id BIGINT NOT NULL,
+      subtotal DECIMAL(10, 2) NOT NULL,
+      delivery_charge DECIMAL(10, 2) DEFAULT 0,
+      tax DECIMAL(10, 2) DEFAULT 0,
+      discount DECIMAL(10, 2) DEFAULT 0,
+      total_amount DECIMAL(10, 2) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'UNPAID',
+      due_date DATE,
+      paid_at TIMESTAMP NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      message TEXT NOT NULL,
+      type VARCHAR(30) NOT NULL DEFAULT 'INFO',
+      is_read BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      customer_id BIGINT NOT NULL,
+      product_id BIGINT NOT NULL,
+      quantity_per_day DECIMAL(10, 2) NOT NULL,
+      days_of_week VARCHAR(50) NOT NULL DEFAULT 'MON,TUE,WED,THU,FRI,SAT,SUN',
+      start_date DATE NOT NULL,
+      end_date DATE,
+      status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    );

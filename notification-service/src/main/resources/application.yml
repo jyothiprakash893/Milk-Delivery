@@ -1,0 +1,44 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: notification-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  consumer:
+    group-id: notification-group
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:placeholder_account_sid}
+  auth-token: ${TWILIO_AUTH_TOKEN:placeholder_auth_token}
+  from-number: ${TWILIO_FROM_NUMBER:+1234567890}
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:placeholder_api_key}
+  from-email: ${SENDGRID_FROM_EMAIL:noreply@milkdelivery.com}
+
+logging:
+  level:
+    com.milkdelivery.notification: DEBUG
+    org.springframework.kafka: INFO

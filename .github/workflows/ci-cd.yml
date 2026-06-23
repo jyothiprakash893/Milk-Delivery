@@ -1,0 +1,221 @@
+name: Milk Delivery CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build Eureka Server
+        run: mvn clean package -DskipTests
+        working-directory: eureka-server
+
+      - name: Build Config Server
+        run: mvn clean package -DskipTests
+        working-directory: config-server
+
+      - name: Build Auth Service
+        run: mvn clean package -DskipTests
+        working-directory: auth-service
+
+      - name: Build API Gateway
+        run: mvn clean package -DskipTests
+        working-directory: api-gateway
+
+      - name: Build Customer Service
+        run: mvn clean package -DskipTests
+        working-directory: customer-service
+
+      - name: Build Delivery Service
+        run: mvn clean package -DskipTests
+        working-directory: delivery-service
+
+      - name: Build Billing Service
+        run: mvn clean package -DskipTests
+        working-directory: billing-service
+
+      - name: Build Payment Service
+        run: mvn clean package -DskipTests
+        working-directory: payment-service
+
+      - name: Build Notification Service
+        run: mvn clean package -DskipTests
+        working-directory: notification-service
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+      - name: Run tests
+        run: |
+          if [ -f "pom.xml" ]; then mvn test; fi
+          if [ -f "frontend/package.json" ]; then cd frontend && npm test -- --watchAll=false --passWithNoTests; fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            eureka-server/target/*.jar
+            config-server/target/*.jar
+            auth-service/target/*.jar
+            api-gateway/target/*.jar
+            customer-service/target/*.jar
+            delivery-service/target/*.jar
+            billing-service/target/*.jar
+            payment-service/target/*.jar
+            notification-service/target/*.jar
+            frontend/dist
+
+  docker-build:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Eureka Server
+        uses: docker/build-push-action@v6
+        with:
+          context: eureka-server
+          push: true
+          tags: jyothiprakash893/eureka-server:latest
+
+      - name: Build and push Config Server
+        uses: docker/build-push-action@v6
+        with:
+          context: config-server
+          push: true
+          tags: jyothiprakash893/config-server:latest
+
+      - name: Build and push Auth Service
+        uses: docker/build-push-action@v6
+        with:
+          context: auth-service
+          push: true
+          tags: jyothiprakash893/auth-service:latest
+
+      - name: Build and push API Gateway
+        uses: docker/build-push-action@v6
+        with:
+          context: api-gateway
+          push: true
+          tags: jyothiprakash893/api-gateway:latest
+
+      - name: Build and push Customer Service
+        uses: docker/build-push-action@v6
+        with:
+          context: customer-service
+          push: true
+          tags: jyothiprakash893/customer-service:latest
+
+      - name: Build and push Delivery Service
+        uses: docker/build-push-action@v6
+        with:
+          context: delivery-service
+          push: true
+          tags: jyothiprakash893/delivery-service:latest
+
+      - name: Build and push Billing Service
+        uses: docker/build-push-action@v6
+        with:
+          context: billing-service
+          push: true
+          tags: jyothiprakash893/billing-service:latest
+
+      - name: Build and push Payment Service
+        uses: docker/build-push-action@v6
+        with:
+          context: payment-service
+          push: true
+          tags: jyothiprakash893/payment-service:latest
+
+      - name: Build and push Notification Service
+        uses: docker/build-push-action@v6
+        with:
+          context: notification-service
+          push: true
+          tags: jyothiprakash893/notification-service:latest
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: jyothiprakash893/milk-delivery-frontend:latest
+
+  deploy:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
+      - name: Set up kubeconfig
+        run: echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -f k8s/
+
+      - name: Verify deployment rollout status
+        run: |
+          kubectl rollout status deployment/eureka-server --timeout=300s
+          kubectl rollout status deployment/config-server --timeout=300s
+          kubectl rollout status deployment/auth-service --timeout=300s
+          kubectl rollout status deployment/api-gateway --timeout=300s
+          kubectl rollout status deployment/customer-service --timeout=300s
+          kubectl rollout status deployment/delivery-service --timeout=300s
+          kubectl rollout status deployment/billing-service --timeout=300s
+          kubectl rollout status deployment/payment-service --timeout=300s
+          kubectl rollout status deployment/notification-service --timeout=300s
+          kubectl rollout status deployment/milk-delivery-frontend --timeout=300s

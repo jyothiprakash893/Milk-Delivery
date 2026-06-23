@@ -1,0 +1,435 @@
+version: "3.8"
+
+networks:
+  milk-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+
+services:
+
+  # ============================================================
+  # MySQL Database
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: milk-mysql
+    hostname: mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - milk-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # ============================================================
+  # Redis Cache
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: milk-redis
+    hostname: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - milk-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Zookeeper (Kafka dependency)
+  # ============================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: milk-zookeeper
+    hostname: zookeeper
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Kafka Message Broker
+  # ============================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: milk-kafka
+    hostname: kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_started
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    command: |
+      bash -c '
+        /etc/confluent/docker/run &
+        sleep 20
+        echo "Creating Kafka topics..."
+        kafka-topics --create --topic delivery-marked --bootstrap-server localhost:9092 --if-not-exists --replication-factor 1 --partitions 1
+        kafka-topics --create --topic bill-generated --bootstrap-server localhost:9092 --if-not-exists --replication-factor 1 --partitions 1
+        kafka-topics --create --topic payment-received --bootstrap-server localhost:9092 --if-not-exists --replication-factor 1 --partitions 1
+        echo "Topics created successfully."
+        wait
+      '
+    networks:
+      - milk-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "kafka-topics --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ============================================================
+  # Eureka Service Discovery
+  # ============================================================
+  eureka-server:
+    build: ./eureka-server
+    container_name: milk-eureka-server
+    hostname: eureka-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      SERVER_PORT: 8761
+    networks:
+      - milk-network
+    healthcheck:
+      test: wget -qO- http://localhost:8761/actuator/health || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 8
+      start_period: 40s
+
+  # ============================================================
+  # Config Server
+  # ============================================================
+  config-server:
+    build: ./config-server
+    container_name: milk-config-server
+    hostname: config-server
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      SERVER_PORT: 8888
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: file:///${USERPROFILE}/config-repo
+    networks:
+      - milk-network
+    healthcheck:
+      test: wget -qO- http://localhost:8888/actuator/health || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 8
+      start_period: 40s
+
+  # ============================================================
+  # Auth Service
+  # ============================================================
+  auth-service:
+    build: ./auth-service
+    container_name: milk-auth-service
+    hostname: auth-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/users_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      SERVER_PORT: 8081
+    networks:
+      - milk-network
+
+  # ============================================================
+  # API Gateway
+  # ============================================================
+  api-gateway:
+    build: ./api-gateway
+    container_name: milk-api-gateway
+    hostname: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      SERVER_PORT: 8080
+    networks:
+      - milk-network
+    healthcheck:
+      test: wget -qO- http://localhost:8080/actuator/health || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 8
+      start_period: 40s
+
+  # ============================================================
+  # Customer Service
+  # ============================================================
+  customer-service:
+    build: ./customer-service
+    container_name: milk-customer-service
+    hostname: customer-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/customers_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SERVER_PORT: 8082
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Delivery Service
+  # ============================================================
+  delivery-service:
+    build: ./delivery-service
+    container_name: milk-delivery-service
+    hostname: delivery-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/deliveries_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: delivery-service
+      CUSTOMER_SERVICE_URL: http://customer-service:8082/api/customers
+      SERVER_PORT: 8083
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Billing Service
+  # ============================================================
+  billing-service:
+    build: ./billing-service
+    container_name: milk-billing-service
+    hostname: billing-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/billing_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SERVER_PORT: 8084
+      DELIVERY_SERVICE_URL: http://delivery-service:8083/api/deliveries
+      CUSTOMER_SERVICE_URL: http://customer-service:8082/api/customers
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Payment Service
+  # ============================================================
+  payment-service:
+    build: ./payment-service
+    container_name: milk-payment-service
+    hostname: payment-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/payments_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      BILLING_SERVICE_URL: http://billing-service:8084/api/billing
+      SERVER_PORT: 8085
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Notification Service
+  # ============================================================
+  notification-service:
+    build: ./notification-service
+    container_name: milk-notification-service
+    hostname: notification-service
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_URI: http://eureka-server:8761/eureka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: 8086
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Frontend (React + Vite)
+  # ============================================================
+  frontend:
+    build: ./frontend
+    container_name: milk-frontend
+    hostname: frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Prometheus Monitoring
+  # ============================================================
+  prometheus:
+    image: prom/prometheus
+    container_name: milk-prometheus
+    hostname: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - milk-network
+
+  # ============================================================
+  # Grafana Dashboards
+  # ============================================================
+  grafana:
+    image: grafana/grafana
+    container_name: milk-grafana
+    hostname: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SERVER_HTTP_PORT: 3001
+    depends_on:
+      - prometheus
+    networks:
+      - milk-network

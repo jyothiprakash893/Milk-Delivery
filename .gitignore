@@ -1,0 +1,48 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.settings/
+.project
+.classpath
+*.iml
+.idea/
+*.log
+
+# Maven
+log/
+*.log.gz
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# React build
+frontend/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Docker
+docker-compose.override.yml
+
+# Kubernetes
+k8s/secrets.yaml
