@@ -221,33 +221,4 @@ INSERT INTO milk_products (name, description, price, quantity, unit, image_url, 
   ('Paneer', 'Fresh soft paneer', 80.0, 30, '250g', '', true),
   ('Ghee', 'Pure clarified butter', 150.0, 20, '500ml', '', true);
 
--- ============================================================
--- Database 9: Products DB (alternate schema for product-service)
--- ============================================================
-CREATE DATABASE IF NOT EXISTS products_db;
-USE products_db;
 
-CREATE TABLE IF NOT EXISTS milk_products (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description VARCHAR(500),
-    price DOUBLE NOT NULL,
-    quantity INT NOT NULL DEFAULT 0,
-    unit VARCHAR(50) NOT NULL DEFAULT 'Liter',
-    image_url VARCHAR(500),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_active (is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-INSERT INTO milk_products (name, description, price, quantity, unit) VALUES
-    ('Full Cream Milk', 'Rich and creamy full cream milk', 60.0, 100, 'Liter'),
-    ('Toned Milk', 'Low-fat toned milk', 50.0, 100, 'Liter'),
-    ('Double Toned Milk', 'Extra low-fat milk', 45.0, 100, 'Liter'),
-    ('Skimmed Milk', 'Fat-free skimmed milk', 40.0, 100, 'Liter'),
-    ('Curd', 'Fresh thick curd', 30.0, 50, 'Packet'),
-    ('Buttermilk', 'Spiced buttermilk', 20.0, 50, 'Packet'),
-    ('Paneer', 'Fresh soft paneer', 80.0, 30, '250g'),
-    ('Ghee', 'Pure clarified butter', 150.0, 20, '500ml')
-ON DUPLICATE KEY UPDATE name=VALUES(name);
