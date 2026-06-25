@@ -110,7 +110,7 @@ const BoyEarnings = () => {
                     background: 'rgba(255,255,255,0.2)',
                     color: '#fff', borderRadius: '10px', fontSize: '0.75rem',
                   }}>
-                  {s.deliveries} delivery{props => props !== 1 ? 'ies' : 'y'}
+                  {s.deliveries} delivery{s.deliveries !== 1 ? 'ies' : 'y'}
                 </span>
               </div>
               <div className="position-relative">

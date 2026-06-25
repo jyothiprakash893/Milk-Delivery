@@ -3,7 +3,7 @@ import { useTodayDeliveries } from '../hooks/useDeliveries';
 import { useActiveCustomers } from '../hooks/useCustomers';
 import { useAllBills, useUnpaidBills } from '../hooks/useBilling';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
   const now = new Date();

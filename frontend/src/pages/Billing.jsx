@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAllBills, useGenerateBills, useUnpaidBills } from '../hooks/useBilling';
+import { downloadBillPdf } from '../api/billingApi';
+import { toast } from 'react-toastify';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const Billing = () => {
@@ -131,7 +133,11 @@ const Billing = () => {
                     <td className="text-end">
                       <button className="btn btn-sm px-2 py-1" style={{
                         background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: 'none', borderRadius: '8px'
-                      }} title="Download PDF">
+                      }} title="Download PDF" onClick={() => downloadBillPdf(b.id).then(res => {
+                        const url = window.URL.createObjectURL(new Blob([res.data]));
+                        const a = document.createElement('a'); a.href = url; a.download = `bill-${b.id}.pdf`; a.click();
+                        window.URL.revokeObjectURL(url);
+                      }).catch(() => toast.error('Failed to download PDF'))}>
                         <i className="bi bi-file-pdf"></i>
                       </button>
                     </td>

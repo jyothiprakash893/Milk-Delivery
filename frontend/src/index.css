@@ -247,6 +247,10 @@ body {
   background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   color: #1e40af;
 }
+.badge-primary-custom {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #3730a3;
+}
 
 /* ─── Modern Buttons ─── */
 .btn-modern {

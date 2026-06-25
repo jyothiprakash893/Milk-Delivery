@@ -111,7 +111,7 @@ public class DeliveryService {
         List<DeliveryResponse> deliveryResponses = deliveries.stream()
                 .sorted((a, b) -> b.getDeliveryDate().compareTo(a.getDeliveryDate()))
                 .map(delivery -> {
-                    Map<String, Object> customer = customerCache.computeIfAbsent(
+                    Map<String, Object> customer = (Map<String, Object>) customerCache.computeIfAbsent(
                             String.valueOf(delivery.getCustomerId()),
                             k -> fetchCustomerById(delivery.getCustomerId())
                     );

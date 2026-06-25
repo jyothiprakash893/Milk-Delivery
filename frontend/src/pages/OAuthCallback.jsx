@@ -36,7 +36,7 @@ const OAuthCallback = () => {
     } else {
       setError('No authentication data received.');
     }
-  }, []);
+  }, [searchParams, navigate, setUserFromOAuth]);
 
   if (error) {
     return (
