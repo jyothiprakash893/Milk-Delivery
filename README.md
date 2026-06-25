@@ -9,18 +9,23 @@
 ```
 frontend (React 18) ──> api-gateway (Spring Cloud Gateway :8080)
                               │
-       ┌──────────────────────┼──────────────────────┐
-       ▼                      ▼                      ▼
- auth-service  customer-service  delivery-service  billing-service  payment-service  notification-service
- (:8081)          (:8082)           (:8083)           (:8084)           (:8085)           (:8086)
-       │              │               │                │                 │                  │
-       ▼              ▼               ▼                ▼                 ▼                  ▼
-    users_db      customers_db    deliveries_db    billing_db        payments_db       Kafka/Redis
-       │              │               │                │                 │                  │
-       └──────────────┴───────────────┴────────────────┴─────────────────┴──────────────────┘
-                                        │
-                              eureka-server (:8761)
-                              config-server (:8888)
+       ┌──────────────────────┼──────────────────────────┐
+       ▼                      ▼                          ▼
+ auth-service  customer-service  delivery-service  order-service  delivery-boy-service  product-service
+ (:8081)          (:8082)           (:8083)           (:8087)           (:8088)             (:8090)
+       │              │               │                │                  │                  │
+       ▼              ▼               ▼                ▼                  ▼                  ▼
+    users_db      customers_db    deliveries_db    orders_db        delivery_boys_db    products_db
+ billing-service  payment-service  notification-service
+   (:8084)           (:8085)           (:8086)
+       │                │                  │
+       ▼                ▼                  ▼
+   billing_db       payments_db       Kafka/Redis
+       │                │                  │
+       └────────────────┴──────────────────┘
+                    │
+          eureka-server (:8761)
+          config-server (:8888)
 ```
 
 ## Tech Stack
@@ -47,6 +52,9 @@ frontend (React 18) ──> api-gateway (Spring Cloud Gateway :8080)
 | Billing Service | 8084 | Monthly bill auto-generation + PDF |
 | Payment Service | 8085 | Payment collection & tracking |
 | Notification Service | 8086 | WhatsApp/SMS/Email alerts |
+| Order Service | 8087 | Customer orders & assignment to delivery boys |
+| Delivery Boy Service | 8088 | Delivery boy profiles & tracking |
+| Product Service | 8090 | Milk product management & inventory |
 | Frontend | 3000 | React UI |
 
 ## Quick Start
@@ -144,8 +152,9 @@ npm run dev
 
 | Route | Access | Description |
 |-------|--------|-------------|
-| `/login` | Public | Login (Admin + Customer) |
+| `/login` | Public | Login (Admin + Customer + Delivery Boy) |
 | `/register` | Public | Customer self-registration |
+| `/oauth/callback` | Public | OAuth2 login callback |
 | `/dashboard` | Admin | Metrics, charts, stats |
 | `/customers` | Admin | Customer list, CRUD |
 | `/customers/add` | Admin | Add customer form |
@@ -154,18 +163,34 @@ npm run dev
 | `/payments` | Admin | Record payments |
 | `/notifications` | Admin | Send alerts |
 | `/reports` | Admin | Charts & exports |
+| `/service-requests` | Admin | Manage service requests |
+| `/delivery-boys` | Admin | Manage delivery boys |
+| `/orders` | Admin | Manage all orders |
+| `/products` | Admin | Manage milk products |
+| `/my-dashboard` | Customer | Customer dashboard |
+| `/place-order` | Customer | Place new order |
+| `/my-orders` | Customer | My order history |
 | `/my-deliveries` | Customer | My delivery history |
 | `/my-bills` | Customer | My bills |
 | `/my-payments` | Customer | My payments |
+| `/my-service-request` | Customer | My service requests |
+| `/products` | Customer | Browse products |
+| `/boy-dashboard` | Delivery Boy | Delivery boy dashboard |
+| `/boy-assigned` | Delivery Boy | My assigned orders |
+| `/boy-deliveries` | Delivery Boy | My deliveries |
+| `/boy-earnings` | Delivery Boy | My earnings |
 
 ## Database Schema
 
-5 MySQL databases:
+8 MySQL databases:
 - **users_db** — User accounts and roles
 - **customers_db** — Customer profiles
 - **deliveries_db** — Daily delivery records
 - **billing_db** — Monthly bills
 - **payments_db** — Payment records
+- **orders_db** — Customer orders
+- **delivery_boys_db** — Delivery boy profiles
+- **products_db** — Milk products & inventory
 
 Monthly bill formula:
 ```
@@ -178,7 +203,8 @@ Total Bill = Σ (quantity × price_per_litre) for each delivered day
 |-------|----------|-------------|
 | `delivery-marked` | delivery-service | billing-service |
 | `bill-generated` | billing-service | notification-service |
-| `payment-received` | payment-service | billing-service |
+| `payment-received` | payment-service | billing-service, notification-service |
+| `customer-events` | customer-service | notification-service |
 
 ## Project Structure
 
@@ -194,6 +220,9 @@ milk-web/
 ├── billing-service/       # Monthly billing + PDF
 ├── payment-service/       # Payment processing
 ├── notification-service/  # Notifications
+├── order-service/         # Customer orders
+├── delivery-boy-service/  # Delivery boy management
+├── product-service/       # Milk product & inventory management
 ├── frontend/              # React SPA
 ├── k8s/                   # Kubernetes manifests
 ├── prometheus/            # Monitoring config
