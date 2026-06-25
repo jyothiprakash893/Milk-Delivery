@@ -29,7 +29,7 @@ spec:
               service:
                 name: auth-service
                 port:
-                  number: 8081
+                  number: 8091
           - path: /api/customers
             pathType: Prefix
             backend:

@@ -12,7 +12,7 @@ frontend (React 18) ──> api-gateway (Spring Cloud Gateway :8080)
        ┌──────────────────────┼──────────────────────────┐
        ▼                      ▼                          ▼
  auth-service  customer-service  delivery-service  order-service  delivery-boy-service  product-service
- (:8081)          (:8082)           (:8083)           (:8087)           (:8088)             (:8090)
+ (:8091)          (:8082)           (:8083)           (:8087)           (:8088)             (:8090)
        │              │               │                │                  │                  │
        ▼              ▼               ▼                ▼                  ▼                  ▼
     users_db      customers_db    deliveries_db    orders_db        delivery_boys_db    products_db
@@ -46,7 +46,7 @@ frontend (React 18) ──> api-gateway (Spring Cloud Gateway :8080)
 | Eureka Server | 8761 | Service discovery |
 | Config Server | 8888 | Centralized configuration |
 | API Gateway | 8080 | Single entry point with JWT validation |
-| Auth Service | 8081 | JWT login/register/logout/refresh |
+| Auth Service | 8091 | JWT login/register/logout/refresh |
 | Customer Service | 8082 | Customer CRUD management |
 | Delivery Service | 8083 | Daily delivery tracking |
 | Billing Service | 8084 | Monthly bill auto-generation + PDF |

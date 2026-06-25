@@ -21,7 +21,7 @@ spec:
           image: jyothiprakash893/auth-service:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8081
+            - containerPort: 8091
               protocol: TCP
           env:
             - name: SPRING_PROFILES_ACTIVE
@@ -109,7 +109,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health
-              port: 8081
+              port: 8091
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 5
@@ -117,7 +117,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: 8081
+              port: 8091
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 3
@@ -132,8 +132,8 @@ metadata:
     app: auth-service
 spec:
   ports:
-    - port: 8081
-      targetPort: 8081
+    - port: 8091
+      targetPort: 8091
       protocol: TCP
       name: http
   selector:

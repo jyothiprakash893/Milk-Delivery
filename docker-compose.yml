@@ -171,7 +171,7 @@ services:
     hostname: auth-service
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "8091:8091"
     depends_on:
       mysql:
         condition: service_healthy
@@ -195,7 +195,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
-      SERVER_PORT: 8081
+      SERVER_PORT: 8091
     networks:
       - milk-network
 
