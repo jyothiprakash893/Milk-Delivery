@@ -19,7 +19,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
 import javax.crypto.SecretKey;
 import java.util.List;
 
@@ -33,7 +32,8 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             "/swagger-ui/",
             "/v3/api-docs/",
             "/oauth2/",
-            "/login/oauth2/"
+            "/login/oauth2/",
+            "/api/auth/otp"
     );
 
     private static final String BEARER_PREFIX = "Bearer ";
